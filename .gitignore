@@ -1,2 +1,6 @@
+# Build Artifacts
 dist/
 *.exe
+
+# IDEs
+.vscode/
