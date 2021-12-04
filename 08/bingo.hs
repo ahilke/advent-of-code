@@ -1,5 +1,5 @@
 
-module Bingo(Board, Field, readBoard, updateBoard, isWinningBoard, scoreBoard) where
+module Bingo(Board, Field, updateBoard, isWinningBoard, scoreBoard) where
 
 import Data.List (transpose)
 
@@ -20,13 +20,6 @@ updateField :: Int -> Field -> Field
 updateField number field 
     | number == fst field = (number, True)
     | otherwise = field
-
-readBoard :: [String] -> Board
-readBoard = map readRow
-
-readRow :: String -> [Field]
-readRow line = zip numbers (repeat False)
-                where numbers = map read (words line)
 
 scoreBoard :: Int -> Board -> Int
 scoreBoard number board = number * unmarkedNumbers
