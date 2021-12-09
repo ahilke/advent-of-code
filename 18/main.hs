@@ -13,11 +13,11 @@ main = do   matrix <- readLines "input.txt"
                     where adder (row, col) acc
                             | value < minimum neighbors = (row, col):acc
                             | otherwise = acc
-                            where 
+                            where
                                 value = getElem row col matrix
                                 neighbors = getElem row col neighborMatrix
-                basins = map (nub . mapper matrix []) lowestPoints
-                    where mapper matrix basins point = addToBasin matrix point basins   
+                basins = map mapper lowestPoints
+                    where mapper point = addToBasin matrix [] [] [point]
                 basinSizes = reverse $ sort $ map length basins
                 (x:y:z:otherBasins) = basinSizes
 
