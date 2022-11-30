@@ -1,10 +1,14 @@
-# advent-of-code-2021
+# advent-of-code
 
-Solutions for https://adventofcode.com/2021
+Solutions for:
+
+- <https://adventofcode.com/2021>
+- <https://adventofcode.com/2022>
 
 ## Run Program
 
 ```sh
-01 $ ghc -outputdir dist/ -o main.exe main.hs
-01 $ ./main.exe
+cd 2021/01
+ghc -outputdir dist/ -o main.exe main.hs
+./main.exe
 ```
