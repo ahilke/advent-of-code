@@ -26,4 +26,15 @@ executable 2022_01_adding_calories
 
     build-depends:    
         base ^>= 4.17.0.0,
-        split ^>= 0.2.3.5
+        split ^>= 0.2.3.5,
+
+executable 2022_02_rock_paper_scissors
+    import:           2022
+
+    main-is:          Main.hs
+    hs-source-dirs:   2022/02_rock_paper_scissors
+
+    other-modules:    Constants
+
+    build-depends:    
+        base ^>= 4.17.0.0,
