@@ -13,20 +13,25 @@ data-files:         2022/**/input.txt
 common 2022
     ghc-options: -Wall
 
-    other-modules:    Paths_advent_of_code
     autogen-modules:  Paths_advent_of_code
 
+    hs-source-dirs: 2022/app
+
+    other-modules:    
+        Paths_advent_of_code,
+        Read,
+
     default-language: Haskell2010
+
+    build-depends:    
+        base ^>= 4.17.0.0,
+        split ^>= 0.2.3.5,
 
 executable 2022_01_adding_calories
     import:           2022
 
     main-is:          Main.hs
-    hs-source-dirs:   2022/01_adding_calories
-
-    build-depends:    
-        base ^>= 4.17.0.0,
-        split ^>= 0.2.3.5,
+    hs-source-dirs:   2022/01_adding_calories    
 
 executable 2022_02_rock_paper_scissors
     import:           2022
@@ -35,6 +40,3 @@ executable 2022_02_rock_paper_scissors
     hs-source-dirs:   2022/02_rock_paper_scissors
 
     other-modules:    Constants
-
-    build-depends:    
-        base ^>= 4.17.0.0,

@@ -2,12 +2,7 @@ module Main where
 
 import Constants (Move, Outcome, scoreMove, scoreOutcome, toMove, toOutcome)
 import Paths_advent_of_code (getDataFileName)
-
-readLines :: IO FilePath -> IO [String]
-readLines path = do
-    filePath <- path
-    contents <- readFile filePath
-    return (lines contents)
+import Read (readLines)
 
 type MyMove = Move
 
