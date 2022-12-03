@@ -40,3 +40,11 @@ executable 2022_02_rock_paper_scissors
     hs-source-dirs:   2022/02_rock_paper_scissors
 
     other-modules:    Constants
+
+executable 2022_03_rucksack_reorganization
+    import:           2022
+
+    main-is:          Main.hs
+    hs-source-dirs:   2022/03_rucksack_reorganization
+
+    other-modules:    Constants
