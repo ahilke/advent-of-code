@@ -11,6 +11,12 @@ firstContainsSecond (aMin, aMax) (bMin, bMax) = aMin <= bMin && aMax >= bMax
 oneContainsOther :: (Int, Int) -> (Int, Int) -> Bool
 oneContainsOther a b = firstContainsSecond a b || firstContainsSecond b a
 
+inRange :: Int -> (Int, Int) -> Bool
+inRange a (x, y) = a >= x && a <= y
+
+overlaps :: (Int, Int) -> (Int, Int) -> Bool
+overlaps (aMin, aMax) b = aMin `inRange` b || aMax `inRange` b || firstContainsSecond (aMin, aMax) b
+
 -- parses "a-b" into (a, b)
 parseAssignment :: String -> (Int, Int)
 parseAssignment assignment =
@@ -23,12 +29,21 @@ main = do
     input <- readLines (getDataFileName "2022/04_camp_cleanup/input.txt")
     let pairs = map (splitOn ",") input
     let parsed = map (map parseAssignment) pairs
-    let containedAssignments = foldl counter 0 parsed
+    let containedCount = foldl counter 0 parsed
           where
             counter :: Int -> [(Int, Int)] -> Int
             counter count (a:b:_) =
                 (if oneContainsOther a b
                      then count + 1
                      else count)
-            counter _ x = error $ "counting: " ++ show x
-    print containedAssignments
+            counter _ x = error $ "counting contained assignments: " ++ show x
+    print containedCount
+    let overlapCount = foldl counter 0 parsed
+          where
+            counter :: Int -> [(Int, Int)] -> Int
+            counter count (a:b:_) =
+                (if overlaps a b
+                     then count + 1
+                     else count)
+            counter _ x = error $ "counting overlaps: " ++ show x
+    print overlapCount

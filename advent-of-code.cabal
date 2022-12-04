@@ -8,7 +8,9 @@ maintainer:         arno.hilke@tum.de
 
 build-type:         Simple
 extra-doc-files:    README.md
-data-files:         2022/**/input.txt
+data-files:         
+    2022/**/input.txt,
+    2022/**/test.txt,
 
 common 2022
     ghc-options: -Wall
