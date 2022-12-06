@@ -64,3 +64,9 @@ executable 2022_05_supply_stacks
 
     main-is:          Main.hs
     hs-source-dirs:   2022/05_supply_stacks
+
+executable 2022_06_tuning_trouble
+    import:           2022
+
+    main-is:          Main.hs
+    hs-source-dirs:   2022/06_tuning_trouble
