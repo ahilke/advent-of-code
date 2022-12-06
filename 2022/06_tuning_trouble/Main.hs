@@ -3,18 +3,22 @@ module Main where
 import Paths_advent_of_code (getDataFileName)
 import Read (readLines)
 
-allDifferent :: Char -> Char -> Char -> Char -> Bool
-allDifferent a b c d = a /= b && a /= c && a /= d && b /= c && b /= d && c /= d
+import Data.List (nub)
 
-findStart :: [Char] -> Int -> Int
-findStart (a:b:c:d:rest) count =
-    if allDifferent a b c d
+allDifferent :: String -> Bool
+allDifferent chars = length (nub chars) == length chars
+
+findStart :: Int -> [Char] -> Int -> Int
+findStart requiredDifferent chars count =
+    if allDifferent (take requiredDifferent chars)
         then count
-        else findStart (b : c : d : rest) (count + 1)
-findStart _ _ = error "no start pattern found"
+        else findStart requiredDifferent (tail chars) (count + 1)
 
 main :: IO ()
 main = do
     input <- readLines (getDataFileName "2022/06_tuning_trouble/input.txt")
-    let start = findStart (head input) 4
-    print start
+    let firstLine = head input
+    let packetStart = findStart 4 firstLine 4
+    print packetStart
+    let messageStart = findStart 14 firstLine 14
+    print messageStart
