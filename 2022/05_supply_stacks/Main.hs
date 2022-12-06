@@ -32,8 +32,8 @@ parseMoveInstruction input = (read a, read b, read c)
 replace :: a -> Int -> [a] -> [a]
 replace value i list = take i list ++ [value] ++ drop (i + 1) list
 
-processMoveInstruction :: [String] -> (Int, Int, Int) -> [String]
-processMoveInstruction stacks (count, oneIndexedStart, oneIndexedTarget) = trace (show newStacks) newStacks
+processMoveInstruction9000 :: [String] -> (Int, Int, Int) -> [String]
+processMoveInstruction9000 stacks (count, oneIndexedStart, oneIndexedTarget) = trace (show newStacks) newStacks
   where
     start = oneIndexedStart - 1
     target = oneIndexedTarget - 1
@@ -41,6 +41,19 @@ processMoveInstruction stacks (count, oneIndexedStart, oneIndexedTarget) = trace
     targetStack = stacks !! target
     (movedCrates, newStartStack) = splitAt count startStack
     newTargetStack = reverse movedCrates ++ targetStack
+    newStacks = (replace newStartStack start . replace newTargetStack target) stacks
+
+-- the only difference is that it does not reverse `movedCrates`
+-- I could not be bothered to reduce duplication
+processMoveInstruction9001 :: [String] -> (Int, Int, Int) -> [String]
+processMoveInstruction9001 stacks (count, oneIndexedStart, oneIndexedTarget) = trace (show newStacks) newStacks
+  where
+    start = oneIndexedStart - 1
+    target = oneIndexedTarget - 1
+    startStack = stacks !! start
+    targetStack = stacks !! target
+    (movedCrates, newStartStack) = splitAt count startStack
+    newTargetStack = movedCrates ++ targetStack
     newStacks = (replace newStartStack start . replace newTargetStack target) stacks
 
 main :: IO ()
@@ -55,6 +68,9 @@ main = do
     let stacksUntrimmed = transpose stacksTransposed -- nth entry is the nth stack from top to bottom
     let stacks = map strip stacksUntrimmed
     let moveInstructions = map parseMoveInstruction rawMoveInstructions
-    let resultStacks = foldl processMoveInstruction stacks moveInstructions
-    let topCrates = map (take 1) resultStacks
-    print $ concat topCrates
+    let resultStacks9000 = foldl processMoveInstruction9000 stacks moveInstructions
+    let topCrates9000 = map (take 1) resultStacks9000
+    print $ concat topCrates9000
+    let resultStacks9001 = foldl processMoveInstruction9001 stacks moveInstructions
+    let topCrates9001 = map (take 1) resultStacks9001
+    print $ concat topCrates9001
