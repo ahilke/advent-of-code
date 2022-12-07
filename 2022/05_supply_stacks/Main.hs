@@ -6,7 +6,7 @@ import Read (readLines)
 import Data.List (transpose)
 import Data.List.Split (splitOn)
 import Data.String.Utils (strip)
-import Debug.Trace
+import Debug.Trace (trace)
 
 takeEvery :: Int -> [a] -> [a]
 takeEvery n xs =
