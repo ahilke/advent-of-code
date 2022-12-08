@@ -4,6 +4,7 @@ import Paths_advent_of_code (getDataFileName)
 import Read (readLines)
 
 import Data.Foldable (find)
+import Data.List (sort)
 import Data.Maybe (fromJust)
 import Debug.Trace (trace)
 import Text.Printf (printf)
@@ -125,6 +126,14 @@ dirSize input = foldl counter 0 (nodes input)
     counter acc (NodeFile file) = acc + size file
     counter acc (NodeDir dir) = acc + dirSize dir
 
+nodeSize :: Node -> Int
+nodeSize (NodeFile file) = size file
+nodeSize (NodeDir dir) = dirSize dir
+
+treeSize :: Tree -> Int
+treeSize EmptyTree = 0
+treeSize (TreeNode node) = nodeSize node
+
 main :: IO ()
 main = do
     input <- readLines (getDataFileName "2022/07_no_space_left_on_device/input.txt")
@@ -135,12 +144,19 @@ main = do
                 (processLine (tree, path) debugInput)
     let rootTree = TreeNode $ NodeDir $ Dir {dirName = "root", nodes = []}
     let (tree, _) = foldl debugProcessLine (rootTree, []) inputWords
-    let matchingDirs = findAllNodesInTree tree [] smallDir
+    let smallDirs = findAllNodesInTree tree [] smallDir
           where
             smallDir (NodeFile _) = False
             smallDir (NodeDir dir) = dirSize dir <= (100 * 1000)
-    let matchingDirSizes = map toDirSize matchingDirs
+    let smallDirSizes = map nodeSize smallDirs
+    print $ sum smallDirSizes
+    let diskSize = 70 * 1000 * 1000
+    let requiredSize = 30 * 1000 * 1000
+    let occupied = treeSize tree
+    let free = diskSize - occupied
+    let bigDirs = findAllNodesInTree tree [] bigDir
           where
-            toDirSize (NodeFile _) = error "not a dir"
-            toDirSize (NodeDir dir) = dirSize dir
-    print $ sum matchingDirSizes
+            bigDir (NodeFile _) = False
+            bigDir (NodeDir dir) = dirSize dir >= requiredSize - free
+    let bigDirSizes = sort $ map nodeSize bigDirs
+    print $ head bigDirSizes
