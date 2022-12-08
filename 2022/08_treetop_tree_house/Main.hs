@@ -4,7 +4,7 @@ import Paths_advent_of_code (getDataFileName)
 import Read (readLines)
 
 import Data.Char (digitToInt)
-import Data.List (find)
+import Data.List (find, findIndex)
 import Data.Matrix (Matrix, fromLists, getCol, getElem, getRow, mapPos)
 import Data.Maybe (isNothing)
 import Data.Vector (toList)
@@ -51,6 +51,24 @@ boolToInt :: Bool -> Int
 boolToInt True = 1
 boolToInt False = 0
 
+viewRange :: Int -> [Int] -> Int
+viewRange height trees =
+    case findIndex (>= height) trees of
+        Just value -> min (value + 1) (length trees)
+        Nothing -> length trees
+
+scenicScore :: Matrix Int -> (Int, Int) -> Int
+scenicScore treeMap (iRow, iCol) =
+    viewRange tree topColumn * viewRange tree bottomColumn * viewRange tree leftRow * viewRange tree rightRow
+  where
+    tree = getElem iRow iCol treeMap
+    column = toList $ getCol iCol treeMap
+    topColumn = reverse $ take (iRow - 1) column -- need to reverse to go from tree to the top
+    bottomColumn = drop iRow column
+    row = toList $ getRow iRow treeMap
+    leftRow = reverse $ take (iCol - 1) row -- need to reverse to go from tree to the left
+    rightRow = drop iCol row
+
 main :: IO ()
 main = do
     rawInput <- readLines (getDataFileName "2022/08_treetop_tree_house/input.txt")
@@ -63,3 +81,8 @@ main = do
           where
             countTrue acc bool = acc + boolToInt bool
     print visibleCount
+    let scenicTreeMap = mapPos getScenicScore treeMap
+          where
+            getScenicScore (iRow, iCol) _ = scenicScore treeMap (iRow, iCol)
+    let maxScenicScore = foldl max 0 scenicTreeMap
+    print maxScenicScore
