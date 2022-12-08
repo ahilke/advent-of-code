@@ -104,18 +104,43 @@ replaceDir tree (pathSegment:subPath) newDir =
 findNodeInList :: String -> [Node] -> Node
 findNodeInList name list = fromJust $ find (hasName name) list
 
+findAllNodesInTree :: Tree -> [Node] -> (Node -> Bool) -> [Node]
+findAllNodesInTree EmptyTree matchedNodes _ = matchedNodes
+findAllNodesInTree (TreeNode node) matchedNodes predicate = matchedNodes ++ maybeNode ++ matchedChildNodes
+  where
+    maybeNode = [node | predicate node]
+    matchedChildNodes =
+        case node of
+            NodeFile _ -> []
+            NodeDir dir -> concatMap mapper (nodes dir)
+                where mapper child = findAllNodesInTree (TreeNode child) [] predicate
+
 hasName :: String -> Node -> Bool
 hasName name (NodeFile file) = fileName file == name
 hasName name (NodeDir dir) = dirName dir == name
 
+dirSize :: Dir -> Int
+dirSize input = foldl counter 0 (nodes input)
+  where
+    counter acc (NodeFile file) = acc + size file
+    counter acc (NodeDir dir) = acc + dirSize dir
+
 main :: IO ()
 main = do
-    input <- readLines (getDataFileName "2022/07_no_space_left_on_device/test.txt")
+    input <- readLines (getDataFileName "2022/07_no_space_left_on_device/input.txt")
     let inputWords = map words input
     let debugProcessLine (tree, path) debugInput =
             trace
                 (printf "process line %s with path %s and tree %s" (show debugInput) (show path) (show tree))
                 (processLine (tree, path) debugInput)
     let rootTree = TreeNode $ NodeDir $ Dir {dirName = "root", nodes = []}
-    let tree = foldl debugProcessLine (rootTree, []) inputWords
-    print tree
+    let (tree, _) = foldl debugProcessLine (rootTree, []) inputWords
+    let matchingDirs = findAllNodesInTree tree [] smallDir
+          where
+            smallDir (NodeFile _) = False
+            smallDir (NodeDir dir) = dirSize dir <= (100 * 1000)
+    let matchingDirSizes = map toDirSize matchingDirs
+          where
+            toDirSize (NodeFile _) = error "not a dir"
+            toDirSize (NodeDir dir) = dirSize dir
+    print $ sum matchingDirSizes
