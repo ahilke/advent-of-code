@@ -27,9 +27,11 @@ common 2022
 
     build-depends:    
         base ^>= 4.17.0.0,
-        split ^>= 0.2.3.5,
-        MissingH ^>= 1.5.0.1,
         lens ^>= 5.2,
+        matrix ^>= 0.3.6.1,
+        MissingH ^>= 1.5.0.1,
+        split ^>= 0.2.3.5,
+        vector ^>= 0.12.0.1,
 
     default-extensions: 
         DataKinds,
@@ -81,3 +83,10 @@ executable 2022_07_no_space_left_on_device
 
     main-is:          Main.hs
     hs-source-dirs:   2022/07_no_space_left_on_device
+
+executable 2022_08_treetop_tree_house
+    import:           2022
+
+    main-is:          Main.hs
+    hs-source-dirs:   2022/08_treetop_tree_house
+    
