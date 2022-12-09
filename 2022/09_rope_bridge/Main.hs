@@ -3,6 +3,7 @@ module Main where
 import Paths_advent_of_code (getDataFileName)
 import Read (readLines)
 
+import Data.List (mapAccumL)
 import Data.Set (Set, empty, insert, size)
 import Text.Printf (printf)
 
@@ -10,7 +11,7 @@ data State =
     State
         { visited :: Set (Int, Int)
         , headPos :: (Int, Int)
-        , tailPos :: (Int, Int)
+        , tailList :: [(Int, Int)]
         }
     deriving (Show)
 
@@ -38,9 +39,13 @@ processDirection :: State -> Char -> State
 processDirection input direction = newState
   where
     newHeadPos = moveHead (headPos input) direction
-    newTailPos = moveTail newHeadPos (tailPos input)
-    newVisited = insert newTailPos (visited input)
-    newState = State {visited = newVisited, headPos = newHeadPos, tailPos = newTailPos}
+    newTails = snd $ mapAccumL processTail newHeadPos (tailList input)
+      where
+        processTail previous current = (newTailPos, newTailPos)
+          where
+            newTailPos = moveTail previous current
+    newVisited = insert (last newTails) (visited input)
+    newState = State {visited = newVisited, headPos = newHeadPos, tailList = newTails}
 
 main :: IO ()
 main = do
@@ -50,5 +55,8 @@ main = do
           where
             replicateDirections [a, b] = replicate (read b) a
             replicateDirections _ = error "error on replicateDirections"
-    let endState = foldl processDirection State {visited = empty, headPos = (0, 0), tailPos = (0, 0)} directions
-    print $ size $ visited endState
+    let endStateTwo = foldl processDirection State {visited = empty, headPos = (0, 0), tailList = [(0, 0)]} directions
+    print $ size $ visited endStateTwo
+    let endStateTen =
+            foldl processDirection State {visited = empty, headPos = (0, 0), tailList = replicate 9 (0, 0)} directions
+    print $ size $ visited endStateTen
