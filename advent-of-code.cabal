@@ -27,6 +27,7 @@ common 2022
 
     build-depends:    
         base ^>= 4.17.0.0,
+        containers ^>= 0.6.6,
         lens ^>= 5.2,
         matrix ^>= 0.3.6.1,
         MissingH ^>= 1.5.0.1,
@@ -89,4 +90,10 @@ executable 2022_08_treetop_tree_house
 
     main-is:          Main.hs
     hs-source-dirs:   2022/08_treetop_tree_house
+
+executable 2022_09_rope_bridge
+    import:           2022
+
+    main-is:          Main.hs
+    hs-source-dirs:   2022/09_rope_bridge
     
