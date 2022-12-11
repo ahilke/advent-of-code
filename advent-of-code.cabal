@@ -96,4 +96,9 @@ executable 2022_09_rope_bridge
 
     main-is:          Main.hs
     hs-source-dirs:   2022/09_rope_bridge
-    
+
+executable 2022_10_cathode_ray_tube
+    import:           2022
+
+    main-is:          Main.hs
+    hs-source-dirs:   2022/10_cathode_ray_tube
