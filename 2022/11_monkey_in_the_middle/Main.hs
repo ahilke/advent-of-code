@@ -7,16 +7,25 @@ import Read (readLines)
 import Data.Ix (range)
 import Data.List (sort)
 import Data.List.Split (splitOn)
-import Debug.Trace (trace)
 import Text.Printf (printf)
 
 data Monkey =
     Monkey
-        { items :: [Int]
+        { items :: [Item]
         , inspectedItems :: Int
         , operation :: Int -> Int
         , test :: Int -> Int
+        , testNumber :: Int
         }
+
+data Item =
+    Item
+        { itemValue :: Int -- part 1 only uses this
+        , remainders :: [Int] -- part 2 only uses this
+        }
+
+createItem :: Int -> Item
+createItem input = Item {itemValue = input, remainders = repeat input}
 
 instance Show Monkey where
     show monkey = printf "inspected items: %d" (inspectedItems monkey)
@@ -28,11 +37,12 @@ instance Ord Monkey where
     compare a b = compare (inspectedItems a) (inspectedItems b)
 
 readMonkey :: [String] -> Monkey
-readMonkey input = Monkey {items = initItems, inspectedItems = 0, operation = initOperation, test = initTest}
+readMonkey input =
+    Monkey {items = initItems, inspectedItems = 0, operation = initOperation, test = initTest, testNumber = divisor}
   where
     itemLine = input !! 1
     itemString = splitOn ": " itemLine !! 1 -- e.g. "79, 98"
-    initItems = map read (splitOn ", " itemString) :: [Int]
+    initItems = map (createItem . read) (splitOn ", " itemString)
     operationLine = input !! 2
     operationString = splitOn "= old " operationLine !! 1 -- e.g. "* 19"
     operationItems = splitOn " " operationString
@@ -59,40 +69,52 @@ testOperation divisor trueMonkey falseMonkey value =
         then trueMonkey
         else falseMonkey
 
-updateWorry :: Monkey -> Int -> Int
-updateWorry monkey value = div (operation monkey value) 3
+updateWorry :: Monkey -> Item -> Item
+updateWorry monkey value = value {itemValue = div (operation monkey (itemValue value)) 3}
 
-processItem :: Int -> [Monkey] -> Int -> [Monkey]
-processItem monkeyIndex monkeys worry =
-    trace
-        (printf "worry: %d -> %d, monkey: %d -> %d" worry newWorry monkeyIndex newMonkeyIndex)
-        replace
-        newMonkeyWithItem
-        newMonkeyIndex
-        (replace oldMonkeyWithoutItem monkeyIndex monkeys)
+updateWorryDiv :: [Monkey] -> Monkey -> Item -> Item
+updateWorryDiv monkeys monkey value = value {remainders = newRemainders}
+  where
+    divisors = map testNumber monkeys
+    oldRemainders = remainders value
+    updateOperation = operation monkey
+    newRemainders = zipWith operationRemainder oldRemainders divisors
+      where
+        operationRemainder remainder divisor = rem (updateOperation remainder) divisor
+
+processItem :: (Monkey -> Item -> Item) -> Int -> [Monkey] -> Item -> [Monkey]
+processItem worryFunction monkeyIndex monkeys worry
+    -- trace (printf "worry: %d -> %d, monkey: %d -> %d" worry newWorry monkeyIndex newMonkeyIndex)
+ = replace newMonkeyWithItem newMonkeyIndex (replace oldMonkeyWithoutItem monkeyIndex monkeys)
   where
     oldMonkey = monkeys !! monkeyIndex
-    newWorry = updateWorry oldMonkey worry
-    newMonkeyIndex = test oldMonkey newWorry
+    newWorry = worryFunction oldMonkey worry
+    newMonkeyIndex = test oldMonkey (remainders newWorry !! monkeyIndex)
     newMonkey = monkeys !! newMonkeyIndex
     oldMonkeyWithoutItem = oldMonkey {items = tail (items oldMonkey), inspectedItems = inspectedItems oldMonkey + 1}
     newMonkeyWithItem = newMonkey {items = items newMonkey ++ [newWorry]}
 
-processMonkey :: [Monkey] -> Int -> [Monkey]
-processMonkey monkeys monkeyIndex = foldl (processItem monkeyIndex) monkeys (items monkey)
+processMonkey :: (Monkey -> Item -> Item) -> [Monkey] -> Int -> [Monkey]
+processMonkey worryFunction monkeys monkeyIndex = foldl (processItem worryFunction monkeyIndex) monkeys (items monkey)
   where
     monkey = monkeys !! monkeyIndex
 
-playRound :: [Monkey] -> [Monkey]
-playRound monkeys = foldl processMonkey monkeys (range (0, length monkeys - 1))
+playRound :: (Monkey -> Item -> Item) -> [Monkey] -> [Monkey]
+playRound worryFunction monkeys = foldl (processMonkey worryFunction) monkeys (range (0, length monkeys - 1))
 
 main :: IO ()
 main = do
     input <- readLines (getDataFileName "2022/11_monkey_in_the_middle/input.txt")
     let monkeyInputs = splitOn [""] input
     let monkeys = map readMonkey monkeyInputs
-    let monkeyRounds = iterate playRound monkeys
+    let monkeyRounds = iterate (playRound updateWorry) monkeys
     let round20Result = monkeyRounds !! 20
     putStr $ unlines (map show round20Result)
     let activeMonkeys = take 2 $ reverse $ sort round20Result
     print $ product (map inspectedItems activeMonkeys)
+    let monkeyRoundsDiv = iterate (playRound (updateWorryDiv monkeys)) monkeys
+    putStr $ unlines (map show (monkeyRoundsDiv !! 20))
+    putStr $ unlines (map show (monkeyRoundsDiv !! 1000))
+    let round10kResultDiv = monkeyRoundsDiv !! 10000
+    let activeMonkeysDiv = take 2 $ reverse $ sort round10kResultDiv
+    print $ product (map inspectedItems activeMonkeysDiv)
