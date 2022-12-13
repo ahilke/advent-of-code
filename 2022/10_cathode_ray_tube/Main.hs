@@ -5,7 +5,7 @@ import Read (readLines)
 
 import Data.Matrix (Matrix, fromLists, setElem, toLists)
 import Debug.Trace (trace)
-import Text.Printf
+import Text.Printf (printf)
 
 data State =
     State
@@ -68,7 +68,6 @@ processLine state input
   where
     inputWords = trace (show state ++ " -> " ++ input) words input
 
--- showState state = 
 main :: IO ()
 main = do
     input <- readLines (getDataFileName "2022/10_cathode_ray_tube/input.txt")

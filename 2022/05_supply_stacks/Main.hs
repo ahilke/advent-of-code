@@ -1,5 +1,6 @@
 module Main where
 
+import List (replace)
 import Paths_advent_of_code (getDataFileName)
 import Read (readLines)
 
@@ -27,10 +28,6 @@ parseMoveInstruction input = (read a, read b, read c)
     fromA = drop (length "move ") input -- "a from b to c"
     (a, fromB) = splitTwo " from " fromA -- "b to c"
     (b, c) = splitTwo " to " fromB
-
--- this is equivalent to `(element i .~ value) list` when using Control.Lens
-replace :: a -> Int -> [a] -> [a]
-replace value i list = take i list ++ [value] ++ drop (i + 1) list
 
 processMoveInstruction9000 :: [String] -> (Int, Int, Int) -> [String]
 processMoveInstruction9000 stacks (count, oneIndexedStart, oneIndexedTarget) = trace (show newStacks) newStacks
