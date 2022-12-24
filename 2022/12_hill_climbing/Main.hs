@@ -1,18 +1,15 @@
 module Main where
 
-import List (findIn2D)
+import List (findAllIn2D, findIn2D)
 import Paths_advent_of_code (getDataFileName)
 import Read (readLines)
 
 import Data.Char (ord)
-import Data.List (elemIndex, find, findIndex)
 import Data.Matrix (Matrix, getElem, safeGet)
 import Data.Matrix as Matrix (fromLists)
-import Data.Maybe (catMaybes, fromJust, isJust)
+import Data.Maybe (catMaybes, isJust)
 import Data.Set (Set, difference, empty, insert, member)
 import Data.Set as Set (fromList, toList)
-import Debug.Trace (trace)
-import Text.Printf (printf)
 
 data Node =
     Node
@@ -20,12 +17,21 @@ data Node =
         , pos :: (Int, Int)
         }
 
+-- add 1 as Matrix is 1-indexed while lists are 0-indexed
+-- swap row and col order to match expected order
 findStart :: [[Char]] -> (Int, Int)
-findStart heightMap = (rowIndex + 1, colIndex + 1) -- add 1 as Matrix is 1-indexed while lists are 0-indexed
+findStart heightMap = (startCol + 1, startRow + 1)
   where
-    rowIndex = fromJust $ findIndex (elem 'S') heightMap
-    row = fromJust $ find (elem 'S') heightMap
-    colIndex = fromJust $ elemIndex 'S' row
+    (startRow, startCol) = findIn2D heightMap 'S'
+
+-- add 1 as Matrix is 1-indexed while lists are 0-indexed
+-- swap row and col order to match expected order
+findAllStartPoints :: [[Char]] -> [(Int, Int)]
+findAllStartPoints heightMap = start : oneIndexed
+  where
+    as = findAllIn2D heightMap 'a'
+    start = findStart heightMap
+    oneIndexed = [(col + 1, row + 1) | (row, col) <- as] -- add 1 as Matrix is 1-indexed while lists are 0-indexed
 
 getMaybePoint :: Matrix a -> (Int, Int) -> Maybe (Int, Int)
 getMaybePoint heightMap (col, row) =
@@ -69,16 +75,8 @@ breadthFirstSearch heightMap steps endPoint visitedPoints currentPoints
     newVisitedPoints = foldl (flip insert) visitedPoints currentPoints
     allTraversableNeighbors = Set.fromList $ concatMap (getTraversableNeighbors heightMap) currentPoints
     unvisitedTraversableNeighbors = difference allTraversableNeighbors visitedPoints
-    nextPoints =
-        trace
-            (printf
-                 "steps: %d, end: %s, visited: %s, current: %s"
-                 steps
-                 (show endPoint)
-                 (show visitedPoints)
-                 (show currentPoints))
-            toList
-            unvisitedTraversableNeighbors
+    -- nextPoints = trace (printf "steps: %d, current: %s" steps (show currentPoints)) toList unvisitedTraversableNeighbors
+    nextPoints = toList unvisitedTraversableNeighbors
 
 main :: IO ()
 main = do
@@ -86,7 +84,8 @@ main = do
     let heightMap = Matrix.fromLists input
     let steps = 0
     let visitedPoints = empty
-    let (startRow, startCol) = findIn2D input 'S'
     let (endRow, endCol) = findIn2D input 'E'
-    let currentPoints = [(startCol + 1, startRow + 1)] -- add 1 as Matrix is 1-indexed while lists are 0-indexed
+    let currentPoints = [findStart input]
     print $ breadthFirstSearch heightMap steps (endCol + 1, endRow + 1) visitedPoints currentPoints
+    let startPoints = findAllStartPoints input
+    print $ breadthFirstSearch heightMap steps (endCol + 1, endRow + 1) visitedPoints startPoints
