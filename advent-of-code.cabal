@@ -109,3 +109,9 @@ executable 2022_11_monkey_in_the_middle
 
     main-is:          Main.hs
     hs-source-dirs:   2022/11_monkey_in_the_middle
+
+executable 2022_12_hill_climbing
+    import:           2022
+
+    main-is:          Main.hs
+    hs-source-dirs:   2022/12_hill_climbing
