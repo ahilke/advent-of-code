@@ -2,7 +2,7 @@ module Main where
 
 import Paths_advent_of_code (getDataFileName)
 import Read (readLines)
-import Tree (Branch(..), Leaf(..), Node(..), Tree(..), addNodeToTree, findAllNodesBy)
+import Tree (Branch(..), Leaf(..), Node(..), addNodeToTreeBy, findAllNodesBy)
 
 import Data.List (sort)
 import Debug.Trace (trace)
@@ -29,8 +29,6 @@ type FileSystemLeaf = Leaf File
 
 type FileSystemNode = Node Dir File
 
-type FileSystemTree = Tree Dir File
-
 type Path = [String]
 
 outputLineToNode :: (String, String) -> FileSystemNode
@@ -44,13 +42,13 @@ parseCd _ "/" = []
 parseCd path ".." = init path
 parseCd path dir = path ++ [dir]
 
-processLine :: (FileSystemTree, Path) -> [String] -> (FileSystemTree, Path)
+processLine :: (FileSystemNode, Path) -> [String] -> (FileSystemNode, Path)
 processLine (tree, path) ["$", "cd", cdInput] = (tree, parseCd path cdInput)
 processLine (tree, path) ["$", "ls"] = (tree, path)
 processLine (tree, path) [a, b] = (newTree, path)
   where
     node = outputLineToNode (a, b)
-    newTree = addNodeToTree tree hasName path node
+    newTree = addNodeToTreeBy tree hasName path node
 processLine _ line = error $ "error processing line: " ++ unwords line
 
 hasName :: String -> FileSystemNode -> Bool
@@ -68,10 +66,6 @@ nodeSize :: FileSystemNode -> Int
 nodeSize (NodeLeaf leaf) = size (leafValue leaf)
 nodeSize (NodeBranch branch) = dirSize branch
 
-treeSize :: FileSystemTree -> Int
-treeSize EmptyTree = 0
-treeSize (TreeNode node) = nodeSize node
-
 main :: IO ()
 main = do
     input <- readLines (getDataFileName "2022/07_no_space_left_on_device/input.txt")
@@ -80,7 +74,7 @@ main = do
             trace
                 (printf "process line %s with path %s and tree %s" (show debugInput) (show path) (show tree))
                 (processLine (tree, path) debugInput)
-    let rootTree = TreeNode $ NodeBranch $ Branch {branchValue = (Dir {dirName = "root"}), children = []}
+    let rootTree = NodeBranch $ Branch {branchValue = (Dir {dirName = "root"}), children = []}
     let (tree, _) = foldl debugProcessLine (rootTree, []) inputWords
     let smallDirs = findAllNodesBy tree smallDir []
           where
@@ -91,7 +85,7 @@ main = do
     print $ sum smallDirSizes
     let diskSize = 70 * 1000 * 1000
     let requiredSize = 30 * 1000 * 1000
-    let occupied = treeSize tree
+    let occupied = nodeSize tree
     let free = diskSize - occupied
     let bigDirs = findAllNodesBy tree bigDir []
           where

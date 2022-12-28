@@ -2,7 +2,7 @@
 -- ambiguous target
 module List
     ( replace
-    , replaceElement
+    , replaceBy
     , findIn2D
     , findAllIn2D
     ) where
@@ -15,12 +15,12 @@ import Data.Maybe (fromJust)
 replace :: tElement -> Int -> [tElement] -> [tElement]
 replace value i list = take i list ++ [value] ++ drop (i + 1) list
 
-replaceElement :: [tElement] -> (tElement -> Bool) -> tElement -> [tElement]
-replaceElement [] _ _ = error "No element to replace."
-replaceElement (x:rest) predicate replacement =
+replaceBy :: [tElement] -> (tElement -> Bool) -> tElement -> [tElement]
+replaceBy [] _ _ = error "No element to replace."
+replaceBy (x:rest) predicate replacement =
     if predicate x
         then replacement : rest
-        else x : replaceElement rest predicate replacement
+        else x : replaceBy rest predicate replacement
 
 findIn2D :: Eq a => [[a]] -> a -> (Int, Int)
 findIn2D list2D x = (rowIndex, colIndex)

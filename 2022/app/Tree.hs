@@ -1,19 +1,22 @@
+-- | A general tree with any number of children per node.
+-- |
+-- | If you do not need a different type for leaves, use just the branch type to be able to add children to any node
 module Tree
     ( Branch(..)
     , Leaf(..)
     , Node(..)
-    , Tree(..)
     , addNodeToTree
+    , addNodeToTreeBy
     , findAllNodesBy
     ) where
 
-import List (replaceElement)
+import List (replace, replaceBy)
 
 import Data.List (find)
 import Data.Maybe (fromJust)
 import Text.Printf (printf)
 
--- TODO: split into core and utility (like findAllNodesBy)
+-- TODO: split into core and utility (like findAllNodesBy); split path predicate functions with suffix `by`
 -- TODO: add tests for these functions
 --
 data Branch tBranchValue tLeafValue =
@@ -39,22 +42,9 @@ data Node tBranchValue tLeafValue
 -- getNodeValue (NodeBranch branch) = branchValue branch
 -- getNodeValue (NodeLeaf leaf) = leafValue leaf
 --
---
--- | A general tree with any number of children per node.
--- |
--- | If you do not need a different type for leaves, use just the branch type to be able to add children to any node
-data Tree tBranchValue tLeafValue
-    = EmptyTree
-    | TreeNode (Node tBranchValue tLeafValue)
-    deriving (Show)
-
 type NodePredicate tBranchValue tLeafValue = Node tBranchValue tLeafValue -> Bool
 
 type PathPredicate tPathSegment tBranchValue tLeafValue = tPathSegment -> NodePredicate tBranchValue tLeafValue
-
-getRootNode :: Tree tBranchValue tLeafValue -> Node tBranchValue tLeafValue
-getRootNode EmptyTree = error "Tree is empty."
-getRootNode (TreeNode node) = node
 
 findChild :: Branch tBranchValue tLeafValue -> NodePredicate tBranchValue tLeafValue -> Node tBranchValue tLeafValue
 findChild branch predicate = fromJust $ find predicate (children branch)
@@ -65,74 +55,112 @@ appendChild branch node = branch {children = children branch ++ [node]}
 
 addNodeToTree ::
        Show tLeafValue
-    => Show tPathSegment =>
-           Tree tBranchValue tLeafValue -> PathPredicate tPathSegment tBranchValue tLeafValue -> [tPathSegment] -> Node tBranchValue tLeafValue -> Tree tBranchValue tLeafValue
-addNodeToTree tree pathPredicate path node = replaceNode tree pathPredicate path (NodeBranch (appendChild branch node))
+    => Node tBranchValue tLeafValue
+    -> [Int]
+    -> Node tBranchValue tLeafValue
+    -> Node tBranchValue tLeafValue
+addNodeToTree tree path node = replaceNode tree path (NodeBranch (appendChild branch node))
   where
-    nodeAtPath = findNode tree pathPredicate path
+    nodeAtPath = findNode tree path
     branch =
         case nodeAtPath of
             NodeLeaf leafAtPath -> error $ printf "Cannot append to leaf. Leaf: %s." (show leafAtPath)
             NodeBranch branchAtPath -> branchAtPath
 
-findNode ::
+addNodeToTreeBy ::
        Show tLeafValue
     => Show tPathSegment =>
-           Tree tBranchValue tLeafValue -> PathPredicate tPathSegment tBranchValue tLeafValue -> [tPathSegment] -> Node tBranchValue tLeafValue
-findNode tree _ [] =
+           Node tBranchValue tLeafValue -> PathPredicate tPathSegment tBranchValue tLeafValue -> [tPathSegment] -> Node tBranchValue tLeafValue -> Node tBranchValue tLeafValue
+addNodeToTreeBy tree pathPredicate path node =
+    replaceNodeBy tree pathPredicate path (NodeBranch (appendChild branch node))
+  where
+    nodeAtPath = findNodeBy tree pathPredicate path
+    branch =
+        case nodeAtPath of
+            NodeLeaf leafAtPath -> error $ printf "Cannot append to leaf. Leaf: %s." (show leafAtPath)
+            NodeBranch branchAtPath -> branchAtPath
+
+findNode :: Show tLeafValue => Node tBranchValue tLeafValue -> [Int] -> Node tBranchValue tLeafValue
+findNode tree [] = tree
+findNode tree (pathSegment:subPath) =
     case tree of
-        EmptyTree -> error "No node for given path."
-        TreeNode node -> node
-findNode tree pathPredicate (pathSegment:subPath) =
-    case tree of
-        EmptyTree -> error "No node for given path."
-        TreeNode (NodeLeaf leaf) ->
+        NodeLeaf leaf ->
             error $
             printf
                 "Path prematurely ends at leaf. Leaf: %s. Remaining path: %s"
                 (show leaf)
                 (show (pathSegment : subPath))
-        TreeNode (NodeBranch branch) -> findNode subTree pathPredicate subPath
+        NodeBranch branch -> findNode subTree subPath
+            where subTree = children branch !! pathSegment
+
+findNodeBy ::
+       Show tLeafValue
+    => Show tPathSegment =>
+           Node tBranchValue tLeafValue -> PathPredicate tPathSegment tBranchValue tLeafValue -> [tPathSegment] -> Node tBranchValue tLeafValue
+findNodeBy tree _ [] = tree
+findNodeBy tree pathPredicate (pathSegment:subPath) =
+    case tree of
+        NodeLeaf leaf ->
+            error $
+            printf
+                "Path prematurely ends at leaf. Leaf: %s. Remaining path: %s"
+                (show leaf)
+                (show (pathSegment : subPath))
+        NodeBranch branch -> findNodeBy subTree pathPredicate subPath
             where nodePredicate = pathPredicate pathSegment
-                  subTree = TreeNode (findChild branch nodePredicate)
+                  subTree = findChild branch nodePredicate
 
 findAllNodesBy ::
-       Tree tBranchValue tLeafValue
+       Node tBranchValue tLeafValue
     -> NodePredicate tBranchValue tLeafValue
     -> [Node tBranchValue tLeafValue]
     -> [Node tBranchValue tLeafValue]
-findAllNodesBy EmptyTree _ matchedNodes = matchedNodes
-findAllNodesBy (TreeNode root) predicate matchedNodes = matchedNodes ++ maybeRoot ++ matchedChildNodes
+findAllNodesBy root predicate matchedNodes = matchedNodes ++ maybeRoot ++ matchedChildNodes
   where
     maybeRoot = [root | predicate root]
     matchedChildNodes =
         case root of
             NodeLeaf _ -> []
             NodeBranch branch -> concatMap findChildNodesBy (children branch)
-                where findChildNodesBy child = findAllNodesBy (TreeNode child) predicate []
+                where findChildNodesBy child = findAllNodesBy child predicate []
 
---
--- TODO: why is this type signature not broken into multiple lines? -> report hindent issue?
 replaceNode ::
        Show tLeafValue
-    => Show tPathSegment =>
-           Tree tBranchValue tLeafValue -> PathPredicate tPathSegment tBranchValue tLeafValue -> [tPathSegment] -> Node tBranchValue tLeafValue -> Tree tBranchValue tLeafValue
-replaceNode tree _ [] newNode =
+    => Node tBranchValue tLeafValue
+    -> [Int]
+    -> Node tBranchValue tLeafValue
+    -> Node tBranchValue tLeafValue
+replaceNode _ [] newNode = newNode
+replaceNode tree (pathSegment:subPath) newNode =
     case tree of
-        EmptyTree -> error "No node for given path."
-        TreeNode _ -> TreeNode newNode
-replaceNode tree pathPredicate (pathSegment:subPath) newNode =
-    case tree of
-        EmptyTree -> error "no node for given path"
-        TreeNode (NodeLeaf leaf) ->
+        NodeLeaf leaf ->
             error $
             printf
                 "Path prematurely ends at leaf. Leaf: %s. Remaining path: %s"
                 (show leaf)
                 (show (pathSegment : subPath))
-        TreeNode (NodeBranch branch) -> TreeNode $ NodeBranch $ branch {children = newChildren}
+        NodeBranch branch -> NodeBranch $ branch {children = newChildren}
+            where subTree = children branch !! pathSegment
+                  newSubTree = replaceNode subTree subPath newNode
+                  newChildren = replace newSubTree pathSegment (children branch)
+
+--
+-- TODO: why is this type signature not broken into multiple lines? -> report hindent issue?
+replaceNodeBy ::
+       Show tLeafValue
+    => Show tPathSegment =>
+           Node tBranchValue tLeafValue -> PathPredicate tPathSegment tBranchValue tLeafValue -> [tPathSegment] -> Node tBranchValue tLeafValue -> Node tBranchValue tLeafValue
+replaceNodeBy _ _ [] newNode = newNode
+replaceNodeBy tree pathPredicate (pathSegment:subPath) newNode =
+    case tree of
+        NodeLeaf leaf ->
+            error $
+            printf
+                "Path prematurely ends at leaf. Leaf: %s. Remaining path: %s"
+                (show leaf)
+                (show (pathSegment : subPath))
+        NodeBranch branch -> NodeBranch $ branch {children = newChildren}
             where nodePredicate = pathPredicate pathSegment
-                  subTree = TreeNode (findChild branch nodePredicate)
-                  newSubTree = replaceNode subTree pathPredicate subPath newNode
-                  newSubTreeRoot = getRootNode newSubTree
-                  newChildren = replaceElement (children branch) nodePredicate newSubTreeRoot
+                  subTree = findChild branch nodePredicate
+                  newSubTree = replaceNodeBy subTree pathPredicate subPath newNode
+                  newChildren = replaceBy (children branch) nodePredicate newSubTree
