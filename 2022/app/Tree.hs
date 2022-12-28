@@ -10,6 +10,7 @@ module Tree
     , findAllNodesBy
     ) where
 
+import Debug (traceNothing)
 import List (replace, replaceBy)
 
 import Data.List (find)
@@ -18,6 +19,7 @@ import Text.Printf (printf)
 
 -- TODO: split into core and utility (like findAllNodesBy); split path predicate functions with suffix `by`
 -- TODO: add tests for these functions
+-- TODO: add pretty print
 --
 data Branch tBranchValue tLeafValue =
     Branch
@@ -46,8 +48,9 @@ type NodePredicate tBranchValue tLeafValue = Node tBranchValue tLeafValue -> Boo
 
 type PathPredicate tPathSegment tBranchValue tLeafValue = tPathSegment -> NodePredicate tBranchValue tLeafValue
 
-findChild :: Branch tBranchValue tLeafValue -> NodePredicate tBranchValue tLeafValue -> Node tBranchValue tLeafValue
-findChild branch predicate = fromJust $ find predicate (children branch)
+findChild ::
+       Branch tBranchValue tLeafValue -> NodePredicate tBranchValue tLeafValue -> Maybe (Node tBranchValue tLeafValue)
+findChild branch predicate = find predicate (children branch)
 
 -- todo: do not export this (and possible some other non-needed functions)
 appendChild :: Branch tBranchValue tLeafValue -> Node tBranchValue tLeafValue -> Branch tBranchValue tLeafValue
@@ -58,34 +61,36 @@ addNodeToTree ::
     => Node tBranchValue tLeafValue
     -> [Int]
     -> Node tBranchValue tLeafValue
-    -> Node tBranchValue tLeafValue
+    -> Maybe (Node tBranchValue tLeafValue)
 addNodeToTree tree path node = replaceNode tree path (NodeBranch (appendChild branch node))
   where
     nodeAtPath = findNode tree path
     branch =
-        case nodeAtPath of
-            NodeLeaf leafAtPath -> error $ printf "Cannot append to leaf. Leaf: %s." (show leafAtPath)
-            NodeBranch branchAtPath -> branchAtPath
+        fromJust $
+        case fromJust nodeAtPath of
+            NodeLeaf leafAtPath -> traceNothing $ printf "Cannot append to leaf. Leaf: %s." (show leafAtPath)
+            NodeBranch branchAtPath -> Just branchAtPath
 
 addNodeToTreeBy ::
        Show tLeafValue
     => Show tPathSegment =>
-           Node tBranchValue tLeafValue -> PathPredicate tPathSegment tBranchValue tLeafValue -> [tPathSegment] -> Node tBranchValue tLeafValue -> Node tBranchValue tLeafValue
+           Node tBranchValue tLeafValue -> PathPredicate tPathSegment tBranchValue tLeafValue -> [tPathSegment] -> Node tBranchValue tLeafValue -> Maybe (Node tBranchValue tLeafValue)
 addNodeToTreeBy tree pathPredicate path node =
     replaceNodeBy tree pathPredicate path (NodeBranch (appendChild branch node))
   where
     nodeAtPath = findNodeBy tree pathPredicate path
     branch =
-        case nodeAtPath of
-            NodeLeaf leafAtPath -> error $ printf "Cannot append to leaf. Leaf: %s." (show leafAtPath)
-            NodeBranch branchAtPath -> branchAtPath
+        fromJust $
+        case fromJust nodeAtPath of
+            NodeLeaf leafAtPath -> traceNothing $ printf "Cannot append to leaf. Leaf: %s." (show leafAtPath)
+            NodeBranch branchAtPath -> Just branchAtPath
 
-findNode :: Show tLeafValue => Node tBranchValue tLeafValue -> [Int] -> Node tBranchValue tLeafValue
-findNode tree [] = tree
+findNode :: Show tLeafValue => Node tBranchValue tLeafValue -> [Int] -> Maybe (Node tBranchValue tLeafValue)
+findNode tree [] = Just tree
 findNode tree (pathSegment:subPath) =
     case tree of
         NodeLeaf leaf ->
-            error $
+            traceNothing $
             printf
                 "Path prematurely ends at leaf. Leaf: %s. Remaining path: %s"
                 (show leaf)
@@ -96,19 +101,19 @@ findNode tree (pathSegment:subPath) =
 findNodeBy ::
        Show tLeafValue
     => Show tPathSegment =>
-           Node tBranchValue tLeafValue -> PathPredicate tPathSegment tBranchValue tLeafValue -> [tPathSegment] -> Node tBranchValue tLeafValue
-findNodeBy tree _ [] = tree
+           Node tBranchValue tLeafValue -> PathPredicate tPathSegment tBranchValue tLeafValue -> [tPathSegment] -> Maybe (Node tBranchValue tLeafValue)
+findNodeBy tree _ [] = Just tree
 findNodeBy tree pathPredicate (pathSegment:subPath) =
     case tree of
         NodeLeaf leaf ->
-            error $
+            traceNothing $
             printf
                 "Path prematurely ends at leaf. Leaf: %s. Remaining path: %s"
                 (show leaf)
                 (show (pathSegment : subPath))
         NodeBranch branch -> findNodeBy subTree pathPredicate subPath
             where nodePredicate = pathPredicate pathSegment
-                  subTree = findChild branch nodePredicate
+                  subTree = fromJust $ findChild branch nodePredicate
 
 findAllNodesBy ::
        Node tBranchValue tLeafValue
@@ -129,19 +134,19 @@ replaceNode ::
     => Node tBranchValue tLeafValue
     -> [Int]
     -> Node tBranchValue tLeafValue
-    -> Node tBranchValue tLeafValue
-replaceNode _ [] newNode = newNode
+    -> Maybe (Node tBranchValue tLeafValue)
+replaceNode _ [] newNode = Just newNode
 replaceNode tree (pathSegment:subPath) newNode =
     case tree of
         NodeLeaf leaf ->
-            error $
+            traceNothing $
             printf
                 "Path prematurely ends at leaf. Leaf: %s. Remaining path: %s"
                 (show leaf)
                 (show (pathSegment : subPath))
-        NodeBranch branch -> NodeBranch $ branch {children = newChildren}
+        NodeBranch branch -> Just $ NodeBranch $ branch {children = newChildren}
             where subTree = children branch !! pathSegment
-                  newSubTree = replaceNode subTree subPath newNode
+                  newSubTree = fromJust $ replaceNode subTree subPath newNode
                   newChildren = replace newSubTree pathSegment (children branch)
 
 --
@@ -149,18 +154,18 @@ replaceNode tree (pathSegment:subPath) newNode =
 replaceNodeBy ::
        Show tLeafValue
     => Show tPathSegment =>
-           Node tBranchValue tLeafValue -> PathPredicate tPathSegment tBranchValue tLeafValue -> [tPathSegment] -> Node tBranchValue tLeafValue -> Node tBranchValue tLeafValue
-replaceNodeBy _ _ [] newNode = newNode
+           Node tBranchValue tLeafValue -> PathPredicate tPathSegment tBranchValue tLeafValue -> [tPathSegment] -> Node tBranchValue tLeafValue -> Maybe (Node tBranchValue tLeafValue)
+replaceNodeBy _ _ [] newNode = Just newNode
 replaceNodeBy tree pathPredicate (pathSegment:subPath) newNode =
     case tree of
         NodeLeaf leaf ->
-            error $
+            traceNothing $
             printf
                 "Path prematurely ends at leaf. Leaf: %s. Remaining path: %s"
                 (show leaf)
                 (show (pathSegment : subPath))
-        NodeBranch branch -> NodeBranch $ branch {children = newChildren}
+        NodeBranch branch -> Just $ NodeBranch $ branch {children = newChildren}
             where nodePredicate = pathPredicate pathSegment
-                  subTree = findChild branch nodePredicate
-                  newSubTree = replaceNodeBy subTree pathPredicate subPath newNode
+                  subTree = fromJust $ findChild branch nodePredicate
+                  newSubTree = fromJust $ replaceNodeBy subTree pathPredicate subPath newNode
                   newChildren = replaceBy (children branch) nodePredicate newSubTree

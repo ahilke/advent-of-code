@@ -5,6 +5,7 @@ import Read (readLines)
 import Tree (Branch(..), Leaf(..), Node(..), addNodeToTreeBy, findAllNodesBy)
 
 import Data.List (sort)
+import Data.Maybe (fromJust)
 import Debug.Trace (trace)
 import Text.Printf (printf)
 
@@ -48,7 +49,7 @@ processLine (tree, path) ["$", "ls"] = (tree, path)
 processLine (tree, path) [a, b] = (newTree, path)
   where
     node = outputLineToNode (a, b)
-    newTree = addNodeToTreeBy tree hasName path node
+    newTree = fromJust $ addNodeToTreeBy tree hasName path node
 processLine _ line = error $ "error processing line: " ++ unwords line
 
 hasName :: String -> FileSystemNode -> Bool
@@ -82,7 +83,7 @@ main = do
             smallDir (NodeLeaf _) = False
             smallDir (NodeBranch branch) = dirSize branch <= (100 * 1000)
     let smallDirSizes = map nodeSize smallDirs
-    print $ sum smallDirSizes
+    print $ sum smallDirSizes -- expected: 1350966
     let diskSize = 70 * 1000 * 1000
     let requiredSize = 30 * 1000 * 1000
     let occupied = nodeSize tree
@@ -93,4 +94,4 @@ main = do
             bigDir (NodeLeaf _) = False
             bigDir (NodeBranch branch) = dirSize branch >= requiredSize - free
     let bigDirSizes = sort $ map nodeSize bigDirs
-    print $ head bigDirSizes
+    print $ head bigDirSizes -- expected: 6296435

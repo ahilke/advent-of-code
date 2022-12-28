@@ -21,6 +21,7 @@ common 2022
 
     other-modules:    
         Paths_advent_of_code,
+        Debug,
         List,
         Read,
         Tree,
