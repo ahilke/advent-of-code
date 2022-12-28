@@ -26,18 +26,18 @@ data Branch tBranchValue tLeafValue =
         { branchValue :: tBranchValue
         , children :: [Node tBranchValue tLeafValue]
         }
-    deriving (Show)
+    deriving (Show, Eq)
 
 newtype Leaf tLeafValue =
     Leaf
         { leafValue :: tLeafValue
         }
-    deriving (Show)
+    deriving (Show, Eq)
 
 data Node tBranchValue tLeafValue
     = NodeBranch (Branch tBranchValue tLeafValue)
     | NodeLeaf (Leaf tLeafValue)
-    deriving (Show)
+    deriving (Show, Eq)
 
 -- todo: add getNodeValue to Node? https://stackoverflow.com/a/6119257/10380981
 -- getNodeValue :: Node a b -> (a|b)

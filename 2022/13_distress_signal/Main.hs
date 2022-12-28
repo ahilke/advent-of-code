@@ -5,12 +5,12 @@ import Read (readLines)
 import Tree (Branch(..), Leaf(..), Node(..), addNodeToTree)
 
 import Data.Char (isDigit)
-import Data.List (elemIndices)
-import Data.Maybe (fromJust, isJust)
+import Data.List (elemIndex, elemIndices, sortBy)
+import Data.Maybe (fromJust)
 
 data Empty =
     Empty
-    deriving (Show)
+    deriving (Show, Eq)
 
 type PackageBranch = Branch Empty Int
 
@@ -44,35 +44,44 @@ toTuples [] = []
 toTuples [_] = error "odd number of elements"
 toTuples (x:y:rest) = (x, y) : toTuples rest
 
-isPackageInRightOrder :: (Package, Package) -> Maybe Bool
-isPackageInRightOrder (NodeLeaf a, NodeLeaf b) =
+getPackageOrdering :: Package -> Package -> Ordering
+getPackageOrdering (NodeLeaf a) (NodeLeaf b) =
     if valueA == valueB
-        then Nothing
-        else Just (valueA < valueB)
+        then EQ
+        else compare valueA valueB
   where
     valueA = leafValue a
     valueB = leafValue b
-isPackageInRightOrder (NodeBranch a, NodeBranch b) = isListInRightOrder (children a, children b)
-isPackageInRightOrder (NodeLeaf a, NodeBranch b) = isListInRightOrder ([NodeLeaf a], children b)
-isPackageInRightOrder (NodeBranch a, NodeLeaf b) = isListInRightOrder (children a, [NodeLeaf b])
+getPackageOrdering (NodeBranch a) (NodeBranch b) = getListOrdering (children a) (children b)
+getPackageOrdering (NodeLeaf a) (NodeBranch b) = getListOrdering ([NodeLeaf a]) (children b)
+getPackageOrdering (NodeBranch a) (NodeLeaf b) = getListOrdering (children a) ([NodeLeaf b])
 
-isListInRightOrder :: ([Package], [Package]) -> Maybe Bool
-isListInRightOrder (a, b)
-    | null a && null b = Nothing
-    | null a = Just True
-    | null b = Just False
-    | isJust isFirstInRightOrder = isFirstInRightOrder
-    | otherwise = isRestInRightOrder
+getListOrdering :: [Package] -> [Package] -> Ordering
+getListOrdering a b
+    | null a && null b = EQ
+    | null a = LT
+    | null b = GT
+    | firstOrdering /= EQ = firstOrdering
+    | otherwise = restOrdering
   where
-    isFirstInRightOrder = isPackageInRightOrder (head a, head b)
-    isRestInRightOrder = isListInRightOrder (tail a, tail b)
+    firstOrdering = getPackageOrdering (head a) (head b)
+    restOrdering = getListOrdering (tail a) (tail b)
 
 main :: IO ()
 main = do
     input <- readLines (getDataFileName "2022/13_distress_signal/input.txt")
     let emptyPackage = NodeBranch (Branch {branchValue = Empty, children = []})
-    let packagePairs = toTuples $ map (parseLine 0 [] emptyPackage) (filter (not . null) input)
-    let correctlyOrdered = map isPackageInRightOrder packagePairs
-    let correctIndices = elemIndices (Just True) correctlyOrdered
+    let packages = map (parseLine 0 [] emptyPackage) (filter (not . null) input)
+    let packagePairs = toTuples packages
+    let packagePairOrderings = map getPairOrdering packagePairs
+          where
+            getPairOrdering (a, b) = getPackageOrdering a b
+    let correctIndices = elemIndices LT packagePairOrderings
     let oneIndexedIndices = map (+ 1) correctIndices
-    print $ sum oneIndexedIndices
+    print $ sum oneIndexedIndices -- expected: 5252
+    let divider1 = parseLine 0 [] emptyPackage "[[2]]"
+    let divider2 = parseLine 0 [] emptyPackage "[[6]]"
+    let sortedPackages = sortBy getPackageOrdering (divider1 : divider2 : packages)
+    let divider1Index = fromJust (elemIndex divider1 sortedPackages) + 1 -- +1 to convert to 1-index
+    let divider2Index = fromJust (elemIndex divider2 sortedPackages) + 1 -- +1 to convert to 1-index
+    print $ divider1Index * divider2Index -- expected: 20592
