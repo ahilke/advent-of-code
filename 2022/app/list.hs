@@ -1,6 +1,8 @@
 -- TODO: this is not type checked by vscode
+-- ambiguous target
 module List
     ( replace
+    , replaceElement
     , findIn2D
     , findAllIn2D
     ) where
@@ -8,9 +10,17 @@ module List
 import Data.List (elemIndex, elemIndices, find, findIndex, findIndices)
 import Data.Maybe (fromJust)
 
+-- TODO: change order of arguments to list i value
 -- this is equivalent to `(element i .~ value) list` when using Control.Lens
-replace :: a -> Int -> [a] -> [a]
+replace :: tElement -> Int -> [tElement] -> [tElement]
 replace value i list = take i list ++ [value] ++ drop (i + 1) list
+
+replaceElement :: [tElement] -> (tElement -> Bool) -> tElement -> [tElement]
+replaceElement [] _ _ = error "No element to replace."
+replaceElement (x:rest) predicate replacement =
+    if predicate x
+        then replacement : rest
+        else x : replaceElement rest predicate replacement
 
 findIn2D :: Eq a => [[a]] -> a -> (Int, Int)
 findIn2D list2D x = (rowIndex, colIndex)

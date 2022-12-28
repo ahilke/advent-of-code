@@ -11,12 +11,6 @@ import Data.Maybe (catMaybes, isJust)
 import Data.Set (Set, difference, empty, insert, member)
 import Data.Set as Set (fromList, toList)
 
-data Node =
-    Node
-        { content :: Char
-        , pos :: (Int, Int)
-        }
-
 -- add 1 as Matrix is 1-indexed while lists are 0-indexed
 -- swap row and col order to match expected order
 findStart :: [[Char]] -> (Int, Int)

@@ -23,6 +23,7 @@ common 2022
         Paths_advent_of_code,
         List,
         Read,
+        Tree,
 
     default-language: Haskell2010
 
@@ -38,6 +39,7 @@ common 2022
     default-extensions: 
         DataKinds,
         DuplicateRecordFields,
+        PatternSynonyms,
         ScopedTypeVariables,
 
 executable 2022_01_adding_calories
