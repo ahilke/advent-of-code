@@ -118,3 +118,9 @@ executable 2022_12_hill_climbing
 
     main-is:          Main.hs
     hs-source-dirs:   2022/12_hill_climbing
+
+executable 2022_13_distress_signal
+    import:           2022
+
+    main-is:          Main.hs
+    hs-source-dirs:   2022/13_distress_signal
