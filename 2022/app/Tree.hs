@@ -72,9 +72,12 @@ addNodeToTree tree path node = replaceNode tree path (NodeBranch (appendChild br
             NodeBranch branchAtPath -> Just branchAtPath
 
 addNodeToTreeBy ::
-       Show tLeafValue
-    => Show tPathSegment =>
-           Node tBranchValue tLeafValue -> PathPredicate tPathSegment tBranchValue tLeafValue -> [tPathSegment] -> Node tBranchValue tLeafValue -> Maybe (Node tBranchValue tLeafValue)
+       (Show tLeafValue, Show tPathSegment)
+    => Node tBranchValue tLeafValue
+    -> PathPredicate tPathSegment tBranchValue tLeafValue
+    -> [tPathSegment]
+    -> Node tBranchValue tLeafValue
+    -> Maybe (Node tBranchValue tLeafValue)
 addNodeToTreeBy tree pathPredicate path node =
     replaceNodeBy tree pathPredicate path (NodeBranch (appendChild branch node))
   where
@@ -99,9 +102,11 @@ findNode tree (pathSegment:subPath) =
             where subTree = children branch !! pathSegment
 
 findNodeBy ::
-       Show tLeafValue
-    => Show tPathSegment =>
-           Node tBranchValue tLeafValue -> PathPredicate tPathSegment tBranchValue tLeafValue -> [tPathSegment] -> Maybe (Node tBranchValue tLeafValue)
+       (Show tLeafValue, Show tPathSegment)
+    => Node tBranchValue tLeafValue
+    -> PathPredicate tPathSegment tBranchValue tLeafValue
+    -> [tPathSegment]
+    -> Maybe (Node tBranchValue tLeafValue)
 findNodeBy tree _ [] = Just tree
 findNodeBy tree pathPredicate (pathSegment:subPath) =
     case tree of
@@ -149,12 +154,13 @@ replaceNode tree (pathSegment:subPath) newNode =
                   newSubTree = fromJust $ replaceNode subTree subPath newNode
                   newChildren = replace newSubTree pathSegment (children branch)
 
---
--- TODO: why is this type signature not broken into multiple lines? -> report hindent issue?
 replaceNodeBy ::
-       Show tLeafValue
-    => Show tPathSegment =>
-           Node tBranchValue tLeafValue -> PathPredicate tPathSegment tBranchValue tLeafValue -> [tPathSegment] -> Node tBranchValue tLeafValue -> Maybe (Node tBranchValue tLeafValue)
+       (Show tLeafValue, Show tPathSegment)
+    => Node tBranchValue tLeafValue
+    -> PathPredicate tPathSegment tBranchValue tLeafValue
+    -> [tPathSegment]
+    -> Node tBranchValue tLeafValue
+    -> Maybe (Node tBranchValue tLeafValue)
 replaceNodeBy _ _ [] newNode = Just newNode
 replaceNodeBy tree pathPredicate (pathSegment:subPath) newNode =
     case tree of
