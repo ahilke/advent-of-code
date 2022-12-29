@@ -82,14 +82,15 @@ main :: IO ()
 main = do
     input <- readLines (getDataFileName "2022/14_regolith_reservoir/input.txt")
     let rockInput = map processLine input
-    let emptyMap = matrix 500 1000 (const air)
+    let lowestRock = foldl max 0 $ map (foldl max 0 . map snd) rockInput
+    let rightMostRock = foldl max 0 $ map (foldl max 0 . map fst) rockInput
+    let emptyMap = matrix (max 20 lowestRock + 4) (rightMostRock + lowestRock) (const air)
     let mapWithStart = setElem '+' (swap sandStart) emptyMap -- TODO: why is col/row inversed for set?
     let mapWithRocks = foldl addRockPath mapWithStart rockInput
     let (mapWithSand, steps) = simulateSand (mapWithRocks, 0)
     print $ submatrix 1 20 490 510 mapWithSand -- useful sub-section for test input
     print steps -- expected output: 805
-    let lowestRock = foldl max 0 $ map (foldl max 0 . map snd) rockInput
     let mapWithFloor = addRockPath mapWithRocks [(1, lowestRock + 2), (1000, lowestRock + 2)]
     let (mapWithSand2, steps2) = simulateSand (mapWithFloor, 0)
     print $ submatrix 1 20 490 510 mapWithSand2 -- useful sub-section for test input
-    print steps2
+    print steps2 -- expected output: 25161
