@@ -42,7 +42,7 @@ addRockLine caveMap (currentCol, currentRow) (targetCol, targetRow)
     | otherwise = addRockLine updatedMap newPos (targetCol, targetRow)
   where
     newPos = moveTowards (currentCol, currentRow) (targetCol, targetRow)
-    updatedMap = setElem rock (currentRow, currentCol) caveMap
+    updatedMap = setElem rock (currentRow + 1, currentCol) caveMap -- account for 1-index for row where input is 0-indexed to guarantee correct height
 
 moveTowards :: (Int, Int) -> (Int, Int) -> (Int, Int)
 moveTowards (currentCol, currentRow) (targetCol, targetRow)
@@ -64,6 +64,7 @@ simulateSand (caveMap, sandUnits) =
 -- | Returns the updated map and whether the sand unit came to rest or fell off.
 simulateSandUnit :: Matrix Char -> (Int, Int) -> (Matrix Char, Bool)
 simulateSandUnit caveMap (sandCol, sandRow)
+    | startBlocked = (caveMap, False)
     | isNothing down = (caveMap, False)
     | left /= air && safeDown /= air && right /= air = (setElem sand (sandRow, sandCol) caveMap, True)
     | safeDown == air = simulateSandUnit caveMap (sandCol, sandRow + 1)
@@ -71,6 +72,7 @@ simulateSandUnit caveMap (sandCol, sandRow)
     | right == air = simulateSandUnit caveMap (sandCol + 1, sandRow + 1)
     | otherwise = error "Unexpected case!"
   where
+    startBlocked = getElem 1 500 caveMap == sand
     down = safeGet (sandRow + 1) sandCol caveMap
     safeDown = fromJust down
     left = getElem (sandRow + 1) (sandCol - 1) caveMap
@@ -79,11 +81,15 @@ simulateSandUnit caveMap (sandCol, sandRow)
 main :: IO ()
 main = do
     input <- readLines (getDataFileName "2022/14_regolith_reservoir/input.txt")
+    let rockInput = map processLine input
     let emptyMap = matrix 500 1000 (const air)
     let mapWithStart = setElem '+' (swap sandStart) emptyMap -- TODO: why is col/row inversed for set?
-    let mapWithRocks = foldl parseLineAndAddPath mapWithStart input
-          where
-            parseLineAndAddPath caveMap line = addRockPath caveMap (processLine line)
+    let mapWithRocks = foldl addRockPath mapWithStart rockInput
     let (mapWithSand, steps) = simulateSand (mapWithRocks, 0)
-    print $ submatrix 1 20 490 510 mapWithSand
-    print steps
+    print $ submatrix 1 20 490 510 mapWithSand -- useful sub-section for test input
+    print steps -- expected output: 805
+    let lowestRock = foldl max 0 $ map (foldl max 0 . map snd) rockInput
+    let mapWithFloor = addRockPath mapWithRocks [(1, lowestRock + 2), (1000, lowestRock + 2)]
+    let (mapWithSand2, steps2) = simulateSand (mapWithFloor, 0)
+    print $ submatrix 1 20 490 510 mapWithSand2 -- useful sub-section for test input
+    print steps2
