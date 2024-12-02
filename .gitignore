@@ -5,6 +5,7 @@ dist-newstyle/
 
 # IDEs
 .vscode/
+.idea/
 
 # OS
 .DS_Store
