@@ -1,5 +1,6 @@
 package d02rednosedreports
 
+import extensions.list.removeAt
 import java.io.File
 
 fun main() {
@@ -14,7 +15,7 @@ fun main() {
 
     val safeLevels =
         readings
-            .map { levels -> levels.mapIndexed { index, level -> levels.toMutableList().apply { removeAt(index) }.toList() } }
+            .map { levels -> levels.indices.map { i -> levels.removeAt(i) } }
             .count { levelVariations -> levelVariations.any { isSafe(it) } }
 
     println("Part 02: $safeLevels") // 4 / 540
