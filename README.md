@@ -4,6 +4,7 @@ Solutions for:
 
 - <https://adventofcode.com/2021>
 - <https://adventofcode.com/2022>
+- <https://adventofcode.com/2024>
 
 ## Run Program
 
@@ -20,3 +21,7 @@ ghc -outputdir dist/ -o main.exe main.hs
 ```sh
 cabal run 2022_01_adding_calories
 ```
+
+### 2024
+
+just use IntelliJ
