@@ -4,21 +4,23 @@ import java.io.File
 import kotlin.math.abs
 
 fun main() {
-    val lines = File("src/main/kotlin/d01historianhysteria/input.txt").readLines()
     val (leftList, rightList) =
-        lines.map {
-            it.split(Regex("""\s+"""), limit = 2).let { (left, right) ->
-                left to right
-            }
-        }.unzip()
+        File("src/main/kotlin/d01historianhysteria/input.txt").readLines()
+            .map { line -> line.split(Regex("""\s+"""), limit = 2) }
+            .map { (left, right) -> left.toInt() to right.toInt() }
+            .unzip()
 
-    val orderedPairs = leftList.map { it.toInt() }.sorted() zip rightList.map { it.toInt() }.sorted()
-    val sum = orderedPairs.fold(0) { sum, (left, right) -> sum + abs(left - right) }
+    val sum =
+        leftList
+            .sorted()
+            .zip(rightList.sorted())
+            .sumOf { (left, right) -> abs(left - right) }
 
-    println("Part 01: $sum")
+    println("Part 01: $sum") // 3714264
 
     val similarityScore =
-        leftList.map { left -> left.toInt() * rightList.count { right -> left == right } }
-            .sumOf { it }
-    println("Part 02: $similarityScore")
+        leftList
+            .sumOf { left -> left * rightList.count { right -> right == left } }
+
+    println("Part 02: $similarityScore") // 18805872
 }
