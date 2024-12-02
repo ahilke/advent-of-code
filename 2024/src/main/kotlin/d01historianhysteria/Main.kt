@@ -16,4 +16,9 @@ fun main() {
     val sum = orderedPairs.fold(0) { sum, (left, right) -> sum + abs(left - right) }
 
     println("Part 01: $sum")
+
+    val similarityScore =
+        leftList.map { left -> left.toInt() * rightList.count { right -> left == right } }
+            .sumOf { it }
+    println("Part 02: $similarityScore")
 }
