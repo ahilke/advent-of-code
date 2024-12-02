@@ -16,11 +16,11 @@ fun main() {
             .zip(rightList.sorted())
             .sumOf { (left, right) -> abs(left - right) }
 
-    println("Part 01: $sum") // 3714264
+    println("Part 01: $sum") // 11 / 3714264
 
     val similarityScore =
         leftList
             .sumOf { left -> left * rightList.count { right -> right == left } }
 
-    println("Part 02: $similarityScore") // 18805872
+    println("Part 02: $similarityScore") // 31 / 18805872
 }
