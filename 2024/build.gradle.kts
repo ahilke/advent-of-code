@@ -1,5 +1,7 @@
 plugins {
     kotlin("jvm") version "2.0.21"
+
+    id("com.diffplug.spotless") version "6.25.0"
 }
 
 group = "org.arno"
@@ -11,6 +13,12 @@ repositories {
 
 dependencies {
     testImplementation(kotlin("test"))
+}
+
+spotless {
+    kotlin {
+        ktlint()
+    }
 }
 
 tasks.test {
