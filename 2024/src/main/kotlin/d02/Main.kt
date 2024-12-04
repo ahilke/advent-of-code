@@ -1,11 +1,11 @@
-package d02rednosedreports
+package d02
 
 import extensions.list.removeAt
 import java.io.File
 
 fun main() {
     val readings =
-        File("src/main/kotlin/d02rednosedreports/input.txt").readLines()
+        File("src/main/kotlin/d02/input.txt").readLines()
             .map { line -> line.split(Regex("""\s+""")) }
             .map { values -> values.map { value -> value.toInt() } }
 

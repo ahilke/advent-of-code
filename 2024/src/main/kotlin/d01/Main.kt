@@ -1,11 +1,11 @@
-package d01historianhysteria
+package d01
 
 import java.io.File
 import kotlin.math.abs
 
 fun main() {
     val (leftList, rightList) =
-        File("src/main/kotlin/d01historianhysteria/input.txt").readLines()
+        File("src/main/kotlin/d01/input.txt").readLines()
             .map { line -> line.split(Regex("""\s+"""), limit = 2) }
             .map { (left, right) -> left.toInt() to right.toInt() }
             .unzip()
